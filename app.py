@@ -105,15 +105,10 @@ elif opt == "Update expense":
             "description": description        }
 
         response = requests.put(
-        f"{server_loc}/update_expense/{expense_id}",json=data)
+        f"{server_loc}/update_expense/{expense_id}",data=data)
 
-        st.write("STATUS:", response.status_code)
-        st.write("RESPONSE:", response.text)
+        st.success("Expense updated successfully!")
 
-        if response.status_code == 200:
-            st.success("Expense updated successfully!")
-        else:
-            st.error("Update failed")
         
 elif opt == "Delete expense":
 
