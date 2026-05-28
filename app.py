@@ -15,9 +15,7 @@ opt = st.sidebar.selectbox(
 if opt == "Add expenses":
 
     st.header("Add New Expense")
-
     date = st.date_input("Date")
-
     category = st.selectbox("Category",
         [
             "Food",
@@ -53,10 +51,15 @@ if opt == "Add expenses":
             "description": description
         }
 
-        response = requests.post(f"{server_loc}/add_expense",json=data)
+    response = requests.post(f"{server_loc}/add_expense", params=data)
 
-        if response.status_code == 200:
-            st.success("Expense added successfully!")
+    st.write("STATUS:", response.status_code)
+    st.write("RESPONSE:", response.text)
+
+    if response.status_code == 200:
+        st.success("Expense added successfully!")
+    else:
+        st.error("Something went wrong")
             
 elif opt == "View expenses":
     st.header("View Expenses")
@@ -245,17 +248,14 @@ elif opt == "Analyze Spending":
     st.subheader("Category-wise Spending")
     category_df = pd.DataFrame(
         analysis["category_analysis"],
-        columns=["Category", "Total Amount"]
-    )
+        columns=["Category", "Total Amount"])
     st.dataframe(category_df)
     st.bar_chart(category_df.set_index("Category"))
 
     # ---------------- PAYMENT ANALYSIS ----------------
     st.subheader("Payment Method Analysis")
-    payment_df = pd.DataFrame(
-        analysis["payment_analysis"],
-        columns=["Payment Method", "Total Amount"]
-    )
+    payment_df = pd.DataFrame(analysis["payment_analysis"],
+        columns=["Payment Method", "Total Amount"])
     st.dataframe(payment_df)
     st.line_chart(payment_df.set_index("Payment Method"))
 
