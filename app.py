@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 
-server_loc = st.secrets["server_url"]
+server_loc = st.secrets["server_url"].rstrip("/")
 st.title("Expense Tracker")
 
 opt = st.sidebar.selectbox(
@@ -53,16 +53,14 @@ if opt == "Add expenses":
             "description": description
         }
 
-        response = requests.post(server_loc + "add_expense",
-            params=data
-        )
+        response = requests.post(f"{server_loc}/add_expense",json=data)
 
         if response.status_code == 200:
             st.success("Expense added successfully!")
             
 elif opt == "View expenses":
     st.header("View Expenses")
-    response = requests.get(server_loc + "view_expenses")
+    response = requests.get(f"{server_loc}/view_expenses")
     if response.status_code == 200:
         expenses = response.json()
         df = pd.DataFrame(expenses)
@@ -125,10 +123,7 @@ elif opt == "Update expense":
             "description": description
         }
 
-        response = requests.put(
-            server_loc + f"update_expense/{expense_id}",
-            params=data
-        )
+        response = requests.put(f"{server_loc}/update_expense/{expense_id}",json=data)
         
         if response.status_code == 200:
             st.success("Expense updated successfully!")
@@ -139,7 +134,7 @@ elif opt == "Delete expense":
     st.header("Delete Expense")
     expense_id = st.number_input("Enter Expense ID",min_value=1,step=1)
     if st.button("Delete Expense"):
-        response = requests.delete(server_loc + f"delete_expense/{expense_id}")
+        response = requests.delete(f"{server_loc}/delete_expense/{expense_id}")
         if response.status_code == 200:
             st.success("Expense deleted successfully!")
         else:
@@ -163,7 +158,7 @@ elif opt == "Search expenses":
         ]
     )
     if st.button("Search"):
-        response = requests.get(server_loc + "search_expenses",params={"category": category})
+        response = requests.get(f"{server_loc}/search_expenses", params={"category": category})
         if response.status_code == 200:
             data = response.json()
             df = pd.DataFrame(data)
@@ -178,7 +173,7 @@ elif opt == "Sort expenses":
 
     if st.button("Sort"):
         params = {"sort_by": sort_by, "order": order}
-        response = requests.get(server_loc + "sort_expenses", params=params)
+        response = requests.get(f"{server_loc}/sort_expenses", params=params)
         if response.status_code == 200:
             expenses = response.json()
             df = pd.DataFrame(expenses)
@@ -209,7 +204,7 @@ elif opt == "Filter expenses":
             "min_amount": min_amount,
             "max_amount": max_amount
         }
-        response = requests.get(server_loc + "filter_expenses",params=params)
+        response = requests.get(f"{server_loc}/filter_expenses", params=params)
         if response.status_code == 200:
             data = response.json()
             df = pd.DataFrame(data)
@@ -218,14 +213,15 @@ elif opt == "Filter expenses":
             st.error("Failed to filter expenses.")
             
 # ---------------- GENERATE REPORT ----------------
-
 elif opt == "Generate reports":
 
     st.header("Generate Reports")
     report_type = st.selectbox("Report Type",
         ["Monthly", "Yearly", "Category-wise"])
+
     if st.button("Generate Report"):
-        response = requests.get(server_loc + "generate_report",params={"report_type": report_type})
+
+        response = requests.get(f"{server_loc}/generate_report",params={"report_type": report_type})
         if response.status_code == 200:
             report = response.json()
             st.subheader("Total Spending")
@@ -234,35 +230,37 @@ elif opt == "Generate reports":
             st.dataframe(df)
         else:
             st.error("Failed to generate report.")
-            
-# ---------------- ANALYZE SPENDING ----------------
-
 elif opt == "Analyze Spending":
     st.header("Analyze Spending")
-    response = requests.get(server_loc + "analyze_spending")
-    if response.status_code == 200:
-        analysis = response.json()
 
-        # ---------------- CATEGORY ANALYSIS ----------------
+    response = requests.get(f"{server_loc}/analyze_spending")
 
-        st.subheader("Category-wise Spending")
-        category_df = pd.DataFrame(
-            analysis["category_analysis"],columns=["Category", "Total Amount"])
-        st.dataframe(category_df)
-        st.bar_chart(category_df.set_index("Category"))
+    if response.status_code != 200:
+        st.error("Backend not responding")
+        st.stop()
 
-        # ---------------- PAYMENT ANALYSIS ----------------
+    analysis = response.json()
 
-        st.subheader("Payment Method Analysis")
-        payment_df = pd.DataFrame(
-            analysis["payment_analysis"],columns=["Payment Method", "Total Amount"])
-        st.dataframe(payment_df)
-        st.line_chart(payment_df.set_index("Payment Method"))
+    # ---------------- CATEGORY ANALYSIS ----------------
+    st.subheader("Category-wise Spending")
+    category_df = pd.DataFrame(
+        analysis["category_analysis"],
+        columns=["Category", "Total Amount"]
+    )
+    st.dataframe(category_df)
+    st.bar_chart(category_df.set_index("Category"))
 
-        # ---------------- PIE CHART ----------------
+    # ---------------- PAYMENT ANALYSIS ----------------
+    st.subheader("Payment Method Analysis")
+    payment_df = pd.DataFrame(
+        analysis["payment_analysis"],
+        columns=["Payment Method", "Total Amount"]
+    )
+    st.dataframe(payment_df)
+    st.line_chart(payment_df.set_index("Payment Method"))
 
-        st.subheader("Spending Distribution")
-        pie_df = pd.DataFrame(
-            analysis["category_analysis"])
-        st.dataframe(pie_df)
-        st.bar_chart(pie_df.set_index("Category"))
+    # ---------------- PIE CHART ----------------
+    st.subheader("Spending Distribution")
+    pie_df = pd.DataFrame(analysis["category_analysis"])
+    st.dataframe(pie_df)
+    st.bar_chart(pie_df.set_index("Category"))
