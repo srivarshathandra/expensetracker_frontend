@@ -262,5 +262,7 @@ elif opt == "Analyze Spending":
     # ---------------- PIE CHART ----------------
     st.subheader("Spending Distribution")
     pie_df = pd.DataFrame(analysis["category_analysis"])
+# ensure correct column names
+    pie_df.columns = ["Category", "Total Amount"]
     st.dataframe(pie_df)
     st.bar_chart(pie_df.set_index("Category"))
