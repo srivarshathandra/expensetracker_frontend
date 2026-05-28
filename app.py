@@ -32,7 +32,7 @@ if opt == "Add expenses":
             "description": description
         }
         response = requests.post(
-            f"{server_loc}/add_expense",params=data   # IMPORTANT (matches your FastAPI)
+            f"{server_loc}/add_expense",data=data   # IMPORTANT (matches your FastAPI)
         )
         st.write("STATUS:", response.status_code)
         st.write("RESPONSE:", response.text)
