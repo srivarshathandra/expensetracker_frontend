@@ -34,12 +34,8 @@ if opt == "Add expenses":
         response = requests.post(
             f"{server_loc}/add_expense",data=data   # IMPORTANT (matches your FastAPI)
         )
-        st.write("STATUS:", response.status_code)
-        st.write("RESPONSE:", response.text)
-        if response.status_code == 200:
-            st.success("Expense added successfully!")
-        else:
-            st.error("Something went wrong")
+        st.success("Expense added successfully!")
+
             
 elif opt == "View expenses":
     st.header("View Expenses")
